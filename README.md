@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PersonaForge
 
-## Getting Started
+Outil web qui génère **3 personas marketing détaillés** à partir de la description de votre produit, via **OpenAI gpt-5.4-mini**.
 
-First, run the development server:
+## Fonctionnalités
+
+- Formulaire pour décrire votre produit / service
+- Génération IA de 3 personas (prénom, âge, métier, frustrations, motivations, objections, citation)
+- Premier persona visible gratuitement
+- Personas 2 et 3 floutés avec overlay « Débloquer — 9€ »
+- Interface sombre, violette et moderne
+
+## Prérequis
+
+- [Node.js](https://nodejs.org/) 18+
+- Une clé API [OpenAI](https://platform.openai.com/api-keys)
+
+## Installation
+
+```bash
+cd personaforge
+npm install
+cp .env.example .env.local
+```
+
+Éditez `.env.local` et ajoutez votre clé :
+
+```
+OPENAI_API_KEY=sk-...
+```
+
+## Lancement en local
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrez [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Commande        | Description              |
+|-----------------|--------------------------|
+| `npm run dev`   | Serveur de développement |
+| `npm run build` | Build de production      |
+| `npm run start` | Serveur de production    |
+| `npm run lint`  | Vérification ESLint      |
 
-## Learn More
+## Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── api/generate/route.ts   # API OpenAI gpt-5.4-mini
+│   ├── page.tsx
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── PersonaGenerator.tsx
+│   └── PersonaCard.tsx
+└── types/
+    └── persona.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Déploiement
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Compatible Vercel, Netlify ou tout hébergeur Node.js. Définissez la variable d'environnement `OPENAI_API_KEY` sur la plateforme.
