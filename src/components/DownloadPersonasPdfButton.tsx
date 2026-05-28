@@ -1,141 +1,145 @@
 "use client";
 
 import { useState } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import type { Persona } from "@/types/persona";
 
 interface DownloadPersonasPdfButtonProps {
+  personas: Persona[];
   disabled?: boolean;
 }
 
-const UNSUPPORTED_COLOR_FN_REGEX = /\b(?:oklch|oklab|lab|color)\(/i;
-
-function hasUnsupportedColorFunction(value: string | null | undefined): boolean {
-  if (!value) return false;
-  return UNSUPPORTED_COLOR_FN_REGEX.test(value);
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-function normalizeColorValue(
-  doc: Document,
-  cssProp: string,
-  rawValue: string,
-): string | null {
-  const probe = doc.createElement("div");
-  probe.style.setProperty(cssProp, rawValue);
-  doc.body.appendChild(probe);
-  const resolved = getComputedStyle(probe).getPropertyValue(cssProp).trim();
-  probe.remove();
-
-  if (!resolved || hasUnsupportedColorFunction(resolved)) return null;
-  return resolved;
+function renderList(items: string[]): string {
+  return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 }
 
-function sanitizeUnsupportedColors(clonedDoc: Document): void {
-  const colorProps = [
-    "color",
-    "background-color",
-    "border-top-color",
-    "border-right-color",
-    "border-bottom-color",
-    "border-left-color",
-    "outline-color",
-    "text-decoration-color",
-    "fill",
-    "stroke",
-    "caret-color",
-    "column-rule-color",
-  ];
+function buildPrintablePersonasHtml(personas: Persona[]): string {
+  const cards = personas
+    .map(
+      (persona, index) => `
+      <article class="persona-card">
+        <header>
+          <p class="badge">Persona #${index + 1}</p>
+          <h2>${escapeHtml(persona.prenom)}</h2>
+          <p class="meta">${persona.age} ans - ${escapeHtml(persona.job)}</p>
+          <p class="meta">${escapeHtml(persona.revenusApproximatifs)}</p>
+          <p class="meta"><strong>Famille :</strong> ${escapeHtml(persona.situationFamiliale)}</p>
+        </header>
+        <section><h3>Citation</h3><p>"${escapeHtml(persona.citation)}"</p></section>
+        <section><h3>Applications quotidiennes</h3>${renderList(persona.applicationsQuotidiennes)}</section>
+        <section><h3>Anecdote</h3><p>${escapeHtml(persona.anecdoteQuotidienne)}</p></section>
+        <section><h3>Frustrations</h3>${renderList(persona.frustrations)}</section>
+        <section><h3>Motivations</h3>${renderList(persona.motivations)}</section>
+        <section><h3>Objections</h3>${renderList(persona.objections)}</section>
+      </article>`,
+    )
+    .join("");
 
-  const allElements = clonedDoc.querySelectorAll<HTMLElement | SVGElement>("*");
-  for (const el of allElements) {
-    const style = getComputedStyle(el);
-    for (const prop of colorProps) {
-      const value = style.getPropertyValue(prop).trim();
-      if (!hasUnsupportedColorFunction(value)) continue;
-
-      const normalized = normalizeColorValue(clonedDoc, prop, value);
-      if (normalized) {
-        el.style.setProperty(prop, normalized);
-      } else {
-        el.style.setProperty(prop, prop === "background-color" ? "transparent" : "#ffffff");
+  return `<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PersonaForge - Personas</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #111827;
+        --muted: #4b5563;
+        --border: #e5e7eb;
+        --accent: #6d28d9;
       }
-    }
-  }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: Inter, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      h1 {
+        margin: 0 0 16px;
+        color: var(--accent);
+        font-size: 24px;
+      }
+      .persona-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        break-inside: avoid;
+      }
+      .badge {
+        margin: 0 0 8px;
+        color: var(--accent);
+        font-weight: 700;
+      }
+      h2 { margin: 0 0 6px; font-size: 20px; }
+      h3 {
+        margin: 12px 0 6px;
+        font-size: 14px;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      p { margin: 0 0 8px; line-height: 1.45; }
+      .meta { color: var(--muted); }
+      ul { margin: 0; padding-left: 18px; }
+      li { margin: 0 0 4px; line-height: 1.45; }
+      @media print {
+        @page { size: A4; margin: 12mm; }
+        body { padding: 0; }
+        .persona-card { page-break-inside: avoid; }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Personas PersonaForge</h1>
+    ${cards}
+  </body>
+</html>`;
 }
 
 export function DownloadPersonasPdfButton({
+  personas,
   disabled = false,
 }: DownloadPersonasPdfButtonProps) {
   const [downloading, setDownloading] = useState(false);
 
   async function handleDownload() {
     setDownloading(true);
-    const startedAt = Date.now();
-
     try {
-      const exportNode = document.getElementById("personas-export");
-      if (!exportNode) {
-        throw new Error("Zone personas introuvable pour l'export PDF");
+      if (!Array.isArray(personas) || personas.length !== 3) {
+        throw new Error("Les personas à imprimer sont introuvables.");
       }
 
-      const canvas = await html2canvas(exportNode, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#09090b",
-        ignoreElements: (element) => {
-          const inlineStyle = element.getAttribute("style") ?? "";
-          return hasUnsupportedColorFunction(inlineStyle);
-        },
-        onclone: (clonedDoc) => {
-          sanitizeUnsupportedColors(clonedDoc);
-        },
-      });
-      const image = canvas.toDataURL("image/png");
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imageHeight = (canvas.height * pageWidth) / canvas.width;
-
-      let remainingHeight = imageHeight;
-      let positionY = 0;
-
-      pdf.addImage(image, "PNG", 0, positionY, pageWidth, imageHeight, undefined, "FAST");
-      remainingHeight -= pageHeight;
-
-      while (remainingHeight > 0) {
-        positionY = remainingHeight - imageHeight;
-        pdf.addPage();
-        pdf.addImage(image, "PNG", 0, positionY, pageWidth, imageHeight, undefined, "FAST");
-        remainingHeight -= pageHeight;
+      const printWindow = window.open("", "_blank", "noopener,noreferrer");
+      if (!printWindow) {
+        throw new Error("Impossible d'ouvrir la fenêtre d'impression (popup bloquée ?).");
       }
 
-      pdf.save(`personaforge-personas-${Date.now()}.pdf`);
+      const printableHtml = buildPrintablePersonasHtml(personas);
+      printWindow.document.open();
+      printWindow.document.write(printableHtml);
+      printWindow.document.close();
+      printWindow.focus();
+
+      printWindow.onload = () => {
+        printWindow.print();
+      };
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      const exportNode = document.getElementById("personas-export");
-      const diagnostics = {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-        hasExportNode: Boolean(exportNode),
-        exportNodeSize: exportNode
-          ? {
-              width: exportNode.clientWidth,
-              height: exportNode.clientHeight,
-              scrollWidth: exportNode.scrollWidth,
-              scrollHeight: exportNode.scrollHeight,
-            }
-          : null,
-        userAgent: navigator.userAgent,
-        elapsedMs: Date.now() - startedAt,
-      };
-
-      console.error("[pdf-download] Échec génération PDF", diagnostics);
+      console.error("[pdf-download] Échec impression PDF", error);
 
       alert(
-        `Erreur lors de la génération du PDF: ${error.message}\n\nConsulte la console (F12) pour les détails techniques.`,
+        `Erreur lors de la génération du PDF: ${error.message}`,
       );
     } finally {
       setDownloading(false);

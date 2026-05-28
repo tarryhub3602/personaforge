@@ -202,7 +202,7 @@ export function SuccessContent() {
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <DownloadPersonasPdfButton />
+          <DownloadPersonasPdfButton personas={personas} />
           <Link
             href="/"
             className="inline-flex items-center justify-center rounded-xl border border-violet-500/30 bg-zinc-900/60 px-6 py-3 text-sm font-medium text-violet-300 hover:text-white"

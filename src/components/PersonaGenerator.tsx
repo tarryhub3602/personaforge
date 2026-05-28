@@ -337,7 +337,7 @@ export function PersonaGenerator() {
 
             {unlocked && ipStatus?.canDownloadPdf && (
               <div className="mt-8 flex justify-center">
-                <DownloadPersonasPdfButton />
+                <DownloadPersonasPdfButton personas={personas} />
               </div>
             )}
           </div>
