@@ -120,20 +120,38 @@ export function DownloadPersonasPdfButton({
         throw new Error("Les personas à imprimer sont introuvables.");
       }
 
-      const printWindow = window.open("", "_blank", "noopener,noreferrer");
-      if (!printWindow) {
-        throw new Error("Impossible d'ouvrir la fenêtre d'impression (popup bloquée ?).");
+      const printableHtml = buildPrintablePersonasHtml(personas);
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      iframe.style.visibility = "hidden";
+      document.body.appendChild(iframe);
+
+      const iframeWindow = iframe.contentWindow;
+      if (!iframeWindow) {
+        iframe.remove();
+        throw new Error("Impossible d'initialiser la zone d'impression.");
       }
 
-      const printableHtml = buildPrintablePersonasHtml(personas);
-      printWindow.document.open();
-      printWindow.document.write(printableHtml);
-      printWindow.document.close();
-      printWindow.focus();
+      iframeWindow.document.open();
+      iframeWindow.document.write(printableHtml);
+      iframeWindow.document.close();
 
-      printWindow.onload = () => {
-        printWindow.print();
+      const cleanup = () => {
+        window.setTimeout(() => iframe.remove(), 500);
       };
+
+      iframeWindow.addEventListener("afterprint", cleanup, { once: true });
+
+      window.setTimeout(() => {
+        iframeWindow.focus();
+        iframeWindow.print();
+      }, 150);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       console.error("[pdf-download] Échec impression PDF", error);
