@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { Persona } from "@/types/persona";
-import { getGeneratedAtLabel } from "@/lib/personas-storage";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface DownloadPersonasPdfButtonProps {
-  personas: Persona[];
   disabled?: boolean;
 }
 
 export function DownloadPersonasPdfButton({
-  personas,
   disabled = false,
 }: DownloadPersonasPdfButtonProps) {
   const [downloading, setDownloading] = useState(false);
@@ -19,29 +17,37 @@ export function DownloadPersonasPdfButton({
     setDownloading(true);
 
     try {
-      const res = await fetch("/api/generate-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          personas,
-          generatedAt: getGeneratedAtLabel(),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Erreur lors de la génération du PDF");
+      const exportNode = document.getElementById("personas-export");
+      if (!exportNode) {
+        throw new Error("Zone personas introuvable pour l'export PDF");
       }
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `personaforge-personas-${Date.now()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      const canvas = await html2canvas(exportNode, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#09090b",
+      });
+      const image = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imageHeight = (canvas.height * pageWidth) / canvas.width;
+
+      let remainingHeight = imageHeight;
+      let positionY = 0;
+
+      pdf.addImage(image, "PNG", 0, positionY, pageWidth, imageHeight, undefined, "FAST");
+      remainingHeight -= pageHeight;
+
+      while (remainingHeight > 0) {
+        positionY = remainingHeight - imageHeight;
+        pdf.addPage();
+        pdf.addImage(image, "PNG", 0, positionY, pageWidth, imageHeight, undefined, "FAST");
+        remainingHeight -= pageHeight;
+      }
+
+      pdf.save(`personaforge-personas-${Date.now()}.pdf`);
     } catch (err) {
       alert(
         err instanceof Error

@@ -321,21 +321,23 @@ export function PersonaGenerator() {
 
         {personas && (
           <div id="personas-section" className="mt-16 scroll-mt-24">
-            <PersonaGrid
-              personas={personas}
-              unlocked={unlocked}
-              subtitle={
-                unlocked
-                  ? plan === "pro"
-                    ? "Plan Pro — personas complets"
-                    : "Tous vos personas sont débloqués"
-                  : "Le premier persona est gratuit · Débloquez les 2 autres pour 9€"
-              }
-            />
+            <div id="personas-export">
+              <PersonaGrid
+                personas={personas}
+                unlocked={unlocked}
+                subtitle={
+                  unlocked
+                    ? plan === "pro"
+                      ? "Plan Pro — personas complets"
+                      : "Tous vos personas sont débloqués"
+                    : "Le premier persona est gratuit · Débloquez les 2 autres pour 9€"
+                }
+              />
+            </div>
 
             {unlocked && ipStatus?.canDownloadPdf && (
               <div className="mt-8 flex justify-center">
-                <DownloadPersonasPdfButton personas={personas} />
+                <DownloadPersonasPdfButton />
               </div>
             )}
           </div>
