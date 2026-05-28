@@ -25,12 +25,11 @@ async function resolveExecutablePath(): Promise<string> {
 
 export async function generatePdfFromHtml(html: string): Promise<Buffer> {
   const executablePath = await resolveExecutablePath();
-  const onVercel = Boolean(process.env.VERCEL);
 
   const browser = await puppeteer.launch({
-    args: onVercel ? chromium.args : ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
     defaultViewport: { width: 1280, height: 720 },
-    headless: onVercel ? chromium.headless : true,
+    headless: true,
     executablePath,
   });
 
