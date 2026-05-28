@@ -1,12 +1,15 @@
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 import puppeteer from "puppeteer-core";
 
 const LOCAL_CHROME_MAC =
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const VERCEL_CHROMIUM_PACK_URL =
+  process.env.CHROMIUM_PACK_URL ??
+  "https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.tar";
 
 async function resolveExecutablePath(): Promise<string> {
   if (process.env.VERCEL) {
-    return chromium.executablePath();
+    return chromium.executablePath(VERCEL_CHROMIUM_PACK_URL);
   }
 
   if (process.env.CHROMIUM_EXECUTABLE_PATH) {
@@ -26,9 +29,11 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
 
   const browser = await puppeteer.launch({
     args: onVercel ? chromium.args : ["--no-sandbox", "--disable-setuid-sandbox"],
-    defaultViewport: { width: 1280, height: 720 },
+    defaultViewport: onVercel
+      ? chromium.defaultViewport
+      : { width: 1280, height: 720 },
+    headless: onVercel ? chromium.headless : true,
     executablePath,
-    headless: true,
   });
 
   try {
