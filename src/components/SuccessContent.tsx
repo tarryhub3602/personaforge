@@ -189,18 +189,20 @@ export function SuccessContent() {
           </p>
         </div>
 
-        <PersonaGrid
-          personas={personas}
-          unlocked
-          subtitle={
-            plan === "pro"
-              ? "Abonnement Pro actif"
-              : "Historique One-shot — conservé 3 mois"
-          }
-        />
+        <div id="personas-export">
+          <PersonaGrid
+            personas={personas}
+            unlocked
+            subtitle={
+              plan === "pro"
+                ? "Abonnement Pro actif"
+                : "Historique One-shot — conservé 3 mois"
+            }
+          />
+        </div>
 
         <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <DownloadPersonasPdfButton personas={personas} />
+          <DownloadPersonasPdfButton />
           <Link
             href="/"
             className="inline-flex items-center justify-center rounded-xl border border-violet-500/30 bg-zinc-900/60 px-6 py-3 text-sm font-medium text-violet-300 hover:text-white"
