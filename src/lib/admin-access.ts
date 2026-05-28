@@ -1,7 +1,11 @@
 import { timingSafeEqual } from "crypto";
 import type { NextRequest, NextResponse } from "next/server";
 import type { IpEntry } from "@/types/persona";
-import { getAdminIpEntry } from "@/lib/ips-json";
+import {
+  getActivePaidGeneration,
+  getProMetaFromRow,
+  listGenerationsByIp,
+} from "@/lib/generations";
 
 export const ADMIN_COOKIE_NAME = "pf_admin_access";
 
@@ -36,8 +40,12 @@ export function hasValidAdminCookie(request: NextRequest): boolean {
 
 export async function isIpAdminGranted(ip: string): Promise<boolean> {
   if (!getAdminSecretKey()) return false;
-  const entry = await getAdminIpEntry(ip);
-  return entry?.isAdmin === true && entry.plan === "pro";
+  const rows = await listGenerationsByIp(ip);
+  const paid = getActivePaidGeneration(rows);
+  if (!paid || paid.plan !== "pro") return false;
+
+  const meta = getProMetaFromRow(paid);
+  return Boolean(meta?.subscriptionId?.startsWith("admin:"));
 }
 
 export async function hasAdminAccess(

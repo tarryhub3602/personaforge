@@ -48,6 +48,10 @@ async function syncProSubscription(
   rowId: string,
   meta: ProSubscriptionMeta,
 ): Promise<ProSubscriptionMeta> {
+  if (meta.subscriptionId.startsWith("admin:")) {
+    return meta;
+  }
+
   try {
     const stripe = getStripe();
     const sub = (await stripe.subscriptions.retrieve(

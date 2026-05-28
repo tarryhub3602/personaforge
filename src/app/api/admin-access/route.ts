@@ -4,8 +4,7 @@ import {
   secretsMatch,
   setAdminAccessCookie,
 } from "@/lib/admin-access";
-import { getClientIp } from "@/lib/ip-limit";
-import { grantAdminIpAccess } from "@/lib/ips-json";
+import { getClientIp, markIpPro } from "@/lib/ip-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,13 +25,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const ip = getClientIp(request);
-    const entry = await grantAdminIpAccess(ip);
+    await markIpPro(ip, "admin:manual");
 
     const response = NextResponse.json({
       success: true,
       ip,
-      entry,
-      message: "Accès admin activé (cookie + enregistrement IP)",
+      message: "Accès admin activé (cookie + enregistrement Supabase)",
     });
 
     setAdminAccessCookie(response, secret);
