@@ -10,14 +10,15 @@ import type { IpStatusResponse } from "@/types/persona";
 
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request);
-  const entry = await getIpEntry(ip);
-  const plan = await getPlan(ip);
+  const access = { request };
+  const entry = await getIpEntry(ip, access);
+  const plan = await getPlan(ip, access);
 
   const response: IpStatusResponse = {
     ip,
     plan,
-    canGenerate: await canGenerate(ip),
-    canDownloadPdf: await canDownloadPdf(ip),
+    canGenerate: await canGenerate(ip, access),
+    canDownloadPdf: await canDownloadPdf(ip, access),
     hasOneshotHistory: false,
     proHistoryCount: 0,
   };

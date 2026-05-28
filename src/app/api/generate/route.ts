@@ -24,8 +24,9 @@ export async function POST(request: NextRequest) {
     }
 
     const ip = getClientIp(request);
+    const access = { request };
 
-    if (!(await canGenerate(ip))) {
+    if (!(await canGenerate(ip, access))) {
       return NextResponse.json(
         {
           error: FREE_LIMIT_MESSAGE,
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const personas = await generatePersonasFromDescription(productDescription);
-    const plan = await getPlan(ip);
+    const plan = await getPlan(ip, access);
 
     await saveGeneration(ip, plan, productDescription, personas);
 

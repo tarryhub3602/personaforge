@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import type { Persona, PlanType } from "@/types/persona";
+import type { IpEntry, Persona, PlanType } from "@/types/persona";
 import {
   buildProPersonasPayload,
   deleteAllGenerations,
@@ -12,20 +12,21 @@ import {
   updateGenerationPersonas,
   type ProSubscriptionMeta,
 } from "@/lib/generations";
+import {
+  buildAdminProEntry,
+  hasAdminAccess,
+} from "@/lib/admin-access";
+import { getAdminIpEntry, getDevIpEntry } from "@/lib/ips-json";
 import { getStripe } from "@/lib/stripe";
+
+export type IpAccessContext = {
+  request?: NextRequest;
+};
 
 export const FREE_LIMIT_MESSAGE =
   "Vous avez utilisé votre génération gratuite — débloquez vos 3 personas pour 9€";
 
-export type IpEntry = {
-  plan: PlanType;
-  firstGenerationAt: string;
-  oneShotPaidAt?: string;
-  proSubscriptionId?: string;
-  proActive?: boolean;
-  proCancelledAt?: string | null;
-  proPeriodEnd?: string;
-};
+export type { IpEntry } from "@/types/persona";
 
 export function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -90,7 +91,29 @@ function isProActive(meta: ProSubscriptionMeta): boolean {
   return true;
 }
 
-export async function getIpEntry(ip: string): Promise<IpEntry | null> {
+function isDevProEntryActive(entry: IpEntry): boolean {
+  if (entry.plan !== "pro") return false;
+  if (entry.proActive === false) return false;
+  if (entry.proPeriodEnd) {
+    return new Date(entry.proPeriodEnd) > new Date();
+  }
+  return true;
+}
+
+export async function getIpEntry(
+  ip: string,
+  ctx?: IpAccessContext,
+): Promise<IpEntry | null> {
+  if (await hasAdminAccess(ip, ctx?.request)) {
+    const adminEntry = await getAdminIpEntry(ip);
+    return adminEntry ?? buildAdminProEntry();
+  }
+
+  const devEntry = await getDevIpEntry(ip);
+  if (devEntry && isDevProEntryActive(devEntry)) {
+    return devEntry;
+  }
+
   const rows = await listGenerationsByIp(ip);
   if (rows.length === 0) return null;
 
@@ -131,7 +154,19 @@ export async function getIpEntry(ip: string): Promise<IpEntry | null> {
   return null;
 }
 
-export async function canGenerate(ip: string): Promise<boolean> {
+export async function canGenerate(
+  ip: string,
+  ctx?: IpAccessContext,
+): Promise<boolean> {
+  if (await hasAdminAccess(ip, ctx?.request)) {
+    return true;
+  }
+
+  const devEntry = await getDevIpEntry(ip);
+  if (devEntry && isDevProEntryActive(devEntry)) {
+    return true;
+  }
+
   const rows = await listGenerationsByIp(ip);
   if (rows.length === 0) return true;
 
@@ -146,7 +181,19 @@ export async function canGenerate(ip: string): Promise<boolean> {
   return !hasUsedFreeGeneration(rows);
 }
 
-export async function canDownloadPdf(ip: string): Promise<boolean> {
+export async function canDownloadPdf(
+  ip: string,
+  ctx?: IpAccessContext,
+): Promise<boolean> {
+  if (await hasAdminAccess(ip, ctx?.request)) {
+    return true;
+  }
+
+  const devEntry = await getDevIpEntry(ip);
+  if (devEntry && isDevProEntryActive(devEntry)) {
+    return true;
+  }
+
   const rows = await listGenerationsByIp(ip);
   const paid = getActivePaidGeneration(rows);
   if (!paid) return false;
@@ -159,7 +206,19 @@ export async function canDownloadPdf(ip: string): Promise<boolean> {
   return true;
 }
 
-export async function getPlan(ip: string): Promise<PlanType> {
+export async function getPlan(
+  ip: string,
+  ctx?: IpAccessContext,
+): Promise<PlanType> {
+  if (await hasAdminAccess(ip, ctx?.request)) {
+    return "pro";
+  }
+
+  const devEntry = await getDevIpEntry(ip);
+  if (devEntry && isDevProEntryActive(devEntry)) {
+    return "pro";
+  }
+
   const rows = await listGenerationsByIp(ip);
   const paid = getActivePaidGeneration(rows);
 

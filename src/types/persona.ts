@@ -18,6 +18,18 @@ export interface GeneratePersonasResponse {
 
 export type PlanType = "free" | "oneshot" | "pro";
 
+export type IpEntry = {
+  plan: PlanType;
+  firstGenerationAt: string;
+  oneShotPaidAt?: string;
+  proSubscriptionId?: string;
+  proActive?: boolean;
+  proCancelledAt?: string | null;
+  proPeriodEnd?: string;
+  /** Accès Pro illimité via ADMIN_SECRET_KEY */
+  isAdmin?: boolean;
+};
+
 export interface IpStatusResponse {
   ip: string;
   plan: PlanType;
