@@ -15,6 +15,7 @@ export function DownloadPersonasPdfButton({
 
   async function handleDownload() {
     setDownloading(true);
+    const startedAt = Date.now();
 
     try {
       const exportNode = document.getElementById("personas-export");
@@ -49,10 +50,29 @@ export function DownloadPersonasPdfButton({
 
       pdf.save(`personaforge-personas-${Date.now()}.pdf`);
     } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      const exportNode = document.getElementById("personas-export");
+      const diagnostics = {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        hasExportNode: Boolean(exportNode),
+        exportNodeSize: exportNode
+          ? {
+              width: exportNode.clientWidth,
+              height: exportNode.clientHeight,
+              scrollWidth: exportNode.scrollWidth,
+              scrollHeight: exportNode.scrollHeight,
+            }
+          : null,
+        userAgent: navigator.userAgent,
+        elapsedMs: Date.now() - startedAt,
+      };
+
+      console.error("[pdf-download] Échec génération PDF", diagnostics);
+
       alert(
-        err instanceof Error
-          ? err.message
-          : "Impossible de générer le PDF. Réessayez.",
+        `Erreur lors de la génération du PDF: ${error.message}\n\nConsulte la console (F12) pour les détails techniques.`,
       );
     } finally {
       setDownloading(false);
