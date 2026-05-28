@@ -8,6 +8,61 @@ interface DownloadPersonasPdfButtonProps {
   disabled?: boolean;
 }
 
+const UNSUPPORTED_COLOR_FN_REGEX = /\b(?:oklch|oklab|lab|color)\(/i;
+
+function hasUnsupportedColorFunction(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return UNSUPPORTED_COLOR_FN_REGEX.test(value);
+}
+
+function normalizeColorValue(
+  doc: Document,
+  cssProp: string,
+  rawValue: string,
+): string | null {
+  const probe = doc.createElement("div");
+  probe.style.setProperty(cssProp, rawValue);
+  doc.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).getPropertyValue(cssProp).trim();
+  probe.remove();
+
+  if (!resolved || hasUnsupportedColorFunction(resolved)) return null;
+  return resolved;
+}
+
+function sanitizeUnsupportedColors(clonedDoc: Document): void {
+  const colorProps = [
+    "color",
+    "background-color",
+    "border-top-color",
+    "border-right-color",
+    "border-bottom-color",
+    "border-left-color",
+    "outline-color",
+    "text-decoration-color",
+    "fill",
+    "stroke",
+    "caret-color",
+    "column-rule-color",
+  ];
+
+  const allElements = clonedDoc.querySelectorAll<HTMLElement | SVGElement>("*");
+  for (const el of allElements) {
+    const style = getComputedStyle(el);
+    for (const prop of colorProps) {
+      const value = style.getPropertyValue(prop).trim();
+      if (!hasUnsupportedColorFunction(value)) continue;
+
+      const normalized = normalizeColorValue(clonedDoc, prop, value);
+      if (normalized) {
+        el.style.setProperty(prop, normalized);
+      } else {
+        el.style.setProperty(prop, prop === "background-color" ? "transparent" : "#ffffff");
+      }
+    }
+  }
+}
+
 export function DownloadPersonasPdfButton({
   disabled = false,
 }: DownloadPersonasPdfButtonProps) {
@@ -26,7 +81,15 @@ export function DownloadPersonasPdfButton({
       const canvas = await html2canvas(exportNode, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: "#09090b",
+        ignoreElements: (element) => {
+          const inlineStyle = element.getAttribute("style") ?? "";
+          return hasUnsupportedColorFunction(inlineStyle);
+        },
+        onclone: (clonedDoc) => {
+          sanitizeUnsupportedColors(clonedDoc);
+        },
       });
       const image = canvas.toDataURL("image/png");
 
