@@ -29,9 +29,7 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
 
   const browser = await puppeteer.launch({
     args: onVercel ? chromium.args : ["--no-sandbox", "--disable-setuid-sandbox"],
-    defaultViewport: onVercel
-      ? chromium.defaultViewport
-      : { width: 1280, height: 720 },
+    defaultViewport: { width: 1280, height: 720 },
     headless: onVercel ? chromium.headless : true,
     executablePath,
   });
