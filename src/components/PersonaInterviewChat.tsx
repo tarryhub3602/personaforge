@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Persona } from "@/types/persona";
 import type { InterviewMessage } from "@/lib/persona-interview";
 import { getProductDescription } from "@/lib/personas-storage";
@@ -30,19 +31,23 @@ export function PersonaInterviewChat({
   open,
   onClose,
 }: PersonaInterviewChatProps) {
+  const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState<InterviewMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
   const initials = persona.prenom
     .split(" ")
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -63,13 +68,8 @@ export function PersonaInterviewChat({
       if (e.key === "Escape") onClose();
     }
 
-    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKeyDown);
-    };
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
   useEffect(() => {
@@ -127,23 +127,25 @@ export function PersonaInterviewChat({
     void sendMessage(input);
   }
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="persona-interview-title"
-    >
+  return createPortal(
+    <>
+      {/* Voile sur la page (hors panneau) — clic pour fermer, scroll de la page conservé */}
       <button
         type="button"
-        className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"
-        aria-label="Fermer"
+        className="fixed inset-y-0 left-0 z-50 bg-zinc-950/40 max-sm:hidden"
+        style={{ width: "calc(100% - min(100vw, 28rem))" }}
+        aria-label="Fermer l'interview"
         onClick={onClose}
       />
 
-      <div className="relative flex h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-violet-500/25 bg-zinc-900 shadow-2xl shadow-violet-950/50 sm:h-[min(640px,85dvh)] sm:rounded-2xl">
+      <aside
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="persona-interview-title"
+        className="fixed right-0 top-0 z-50 flex h-dvh w-full max-w-md flex-col border-l border-violet-500/25 bg-zinc-900 shadow-2xl shadow-violet-950/50"
+      >
         <header className="flex shrink-0 items-center gap-3 border-b border-violet-500/15 px-4 py-4">
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${AVATAR_GRADIENTS[index % 3]} text-sm font-bold text-white`}
@@ -164,7 +166,7 @@ export function PersonaInterviewChat({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+            className="rounded-lg border border-violet-500/20 bg-zinc-800/80 p-2 text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-800 hover:text-white"
             aria-label="Fermer le chat"
           >
             <svg
@@ -185,7 +187,7 @@ export function PersonaInterviewChat({
 
         <div
           ref={scrollRef}
-          className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
+          className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4"
         >
           {messages.length === 0 && (
             <div className="rounded-xl border border-violet-500/20 bg-violet-950/30 px-4 py-4 text-sm text-zinc-300">
@@ -193,6 +195,9 @@ export function PersonaInterviewChat({
                 Posez vos questions à {persona.prenom}. Il ou elle répondra en
                 restant dans son personnage (frustrations, motivations,
                 objections…).
+              </p>
+              <p className="mt-2 text-xs text-zinc-500">
+                La page reste scrollable — fermez avec ✕ ou Échap.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {STARTER_QUESTIONS.map((q) => (
@@ -273,7 +278,8 @@ export function PersonaInterviewChat({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </aside>
+    </>,
+    document.body,
   );
 }
