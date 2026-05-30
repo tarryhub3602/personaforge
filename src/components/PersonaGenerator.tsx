@@ -150,7 +150,7 @@ export function PersonaGenerator() {
         if (previousPersonas) setPersonas(previousPersonas);
         setLimitMessage(
           data.error ??
-            "Vous avez utilisé votre génération gratuite — débloquez vos 3 personas pour 9€",
+            "Vous avez utilisé votre génération gratuite — débloquez vos 3 personas pour 4€",
         );
         setLoading(false);
         const status = await loadIpStatus();
@@ -293,7 +293,7 @@ export function PersonaGenerator() {
                 disabled={checkoutLoading}
                 className="mt-4 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {checkoutLoading ? "Redirection…" : "Débloquer — 9€"}
+                {checkoutLoading ? "Redirection…" : "Débloquer — 4€"}
               </button>
               <Link
                 href="/pricing"
@@ -330,7 +330,7 @@ export function PersonaGenerator() {
                     ? plan === "pro"
                       ? "Plan Pro — personas complets"
                       : "Tous vos personas sont débloqués"
-                    : "Le premier persona est gratuit · Débloquez les 2 autres pour 9€"
+                    : "Le premier persona est gratuit · Débloquez les 2 autres pour 4€"
                 }
               />
             </div>

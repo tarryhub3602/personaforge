@@ -28,6 +28,7 @@ export function PersonaGrid({
             persona={persona}
             index={index}
             locked={!unlocked && index > 0}
+            canInterview={unlocked}
           />
         ))}
       </div>

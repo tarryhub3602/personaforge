@@ -4,11 +4,13 @@ import { useState } from "react";
 import type { Persona } from "@/types/persona";
 import { redirectToStripeCheckout } from "@/lib/checkout-client";
 import { getProductDescription, loadPersonas, savePersonas } from "@/lib/personas-storage";
+import { PersonaInterviewChat } from "./PersonaInterviewChat";
 
 interface PersonaCardProps {
   persona: Persona;
   index: number;
   locked?: boolean;
+  canInterview?: boolean;
 }
 
 const AVATAR_GRADIENTS = [
@@ -47,8 +49,14 @@ function ListSection({
   );
 }
 
-export function PersonaCard({ persona, index, locked = false }: PersonaCardProps) {
+export function PersonaCard({
+  persona,
+  index,
+  locked = false,
+  canInterview = false,
+}: PersonaCardProps) {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [interviewOpen, setInterviewOpen] = useState(false);
 
   async function handleUnlock() {
     setCheckoutLoading(true);
@@ -166,7 +174,37 @@ export function PersonaCard({ persona, index, locked = false }: PersonaCardProps
           dotClass="bg-amber-400"
           labelClass="text-amber-400"
         />
+
+        {canInterview && (
+          <button
+            type="button"
+            onClick={() => setInterviewOpen(true)}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 py-2.5 text-sm font-medium text-violet-200 transition hover:border-violet-500/50 hover:bg-violet-500/20"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            Interviewer ce persona
+          </button>
+        )}
       </div>
+
+      <PersonaInterviewChat
+        persona={persona}
+        index={index}
+        open={interviewOpen}
+        onClose={() => setInterviewOpen(false)}
+      />
 
       {locked && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-[2px]">
@@ -193,7 +231,7 @@ export function PersonaCard({ persona, index, locked = false }: PersonaCardProps
               className="mt-4 w-full rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handleUnlock}
             >
-              {checkoutLoading ? "Redirection…" : "Débloquer — 9€"}
+              {checkoutLoading ? "Redirection…" : "Débloquer — 4€"}
             </button>
           </div>
         </div>

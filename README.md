@@ -7,7 +7,7 @@ Outil web qui génère **3 personas marketing détaillés** à partir de la desc
 - Formulaire pour décrire votre produit / service
 - Génération IA de 3 personas (prénom, âge, métier, frustrations, motivations, objections, citation)
 - Premier persona visible gratuitement
-- Personas 2 et 3 floutés avec overlay « Débloquer — 9€ »
+- Personas 2 et 3 floutés avec overlay « Débloquer — 4€ »
 - Interface sombre, violette et moderne
 
 ## Prérequis

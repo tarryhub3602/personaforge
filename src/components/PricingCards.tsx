@@ -23,7 +23,7 @@ export function PricingCards() {
           One-shot
         </p>
         <div className="mt-4 flex items-baseline gap-1">
-          <span className="text-4xl font-bold text-white">9€</span>
+          <span className="text-4xl font-bold text-white">4€</span>
           <span className="text-zinc-500">paiement unique</span>
         </div>
         <ul className="mt-6 flex-1 space-y-3 text-sm text-zinc-300">
@@ -38,7 +38,7 @@ export function PricingCards() {
           disabled={loadingPlan !== null}
           className="mt-8 w-full rounded-xl border border-violet-500/40 bg-violet-500/10 py-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20 disabled:opacity-50"
         >
-          {loadingPlan === "oneshot" ? "Redirection…" : "Choisir One-shot — 9€"}
+          {loadingPlan === "oneshot" ? "Redirection…" : "Choisir One-shot — 4€"}
         </button>
       </div>
 
@@ -50,7 +50,7 @@ export function PricingCards() {
           Pro
         </p>
         <div className="mt-4 flex items-baseline gap-1">
-          <span className="text-4xl font-bold text-white">19€</span>
+          <span className="text-4xl font-bold text-white">9€</span>
           <span className="text-zinc-500">/ mois</span>
         </div>
         <ul className="mt-6 flex-1 space-y-3 text-sm text-zinc-300">
@@ -65,7 +65,7 @@ export function PricingCards() {
           disabled={loadingPlan !== null}
           className="mt-8 w-full rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:from-violet-500 hover:to-purple-500 disabled:opacity-50"
         >
-          {loadingPlan === "pro" ? "Redirection…" : "S'abonner Pro — 19€/mois"}
+          {loadingPlan === "pro" ? "Redirection…" : "S'abonner Pro — 9€/mois"}
         </button>
       </div>
     </div>

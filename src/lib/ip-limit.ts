@@ -24,7 +24,7 @@ export type IpAccessContext = {
 };
 
 export const FREE_LIMIT_MESSAGE =
-  "Vous avez utilisé votre génération gratuite — débloquez vos 3 personas pour 9€";
+  "Vous avez utilisé votre génération gratuite — débloquez vos 3 personas pour 4€";
 
 export type { IpEntry } from "@/types/persona";
 

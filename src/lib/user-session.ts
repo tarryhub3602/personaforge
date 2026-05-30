@@ -23,9 +23,9 @@ export function logoutUser(ip?: string): void {
 export function getPlanLabel(plan: string): string {
   switch (plan) {
     case "pro":
-      return "Pro — 19€/mois";
+      return "Pro — 9€/mois";
     case "oneshot":
-      return "One-shot — 9€";
+      return "One-shot — 4€";
     default:
       return "Gratuit";
   }

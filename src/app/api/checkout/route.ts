@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
               {
                 price_data: {
                   currency: "eur",
-                  unit_amount: 1900,
+                  unit_amount: 900,
                   recurring: { interval: "month" },
                   product_data: {
                     name: "PersonaForge Pro",
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
               {
                 price_data: {
                   currency: "eur",
-                  unit_amount: 900,
+                  unit_amount: 400,
                   product_data: {
                     name: "PersonaForge — One-shot",
                     description:
